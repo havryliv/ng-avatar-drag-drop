@@ -28,19 +28,23 @@ export class Draggable implements OnInit, OnDestroy {
     @Input() dragHandle: HTMLElement;
 
     /**
-     * The selector that defines the drag Bounds.
      */
-    @Input() dragBounds: HTMLElement;
+    @Input() dragEnabled: boolean = true;
 
     /**
+     * CSS class applied on the source draggable element while being dragged.
      */
-    @Input() dragEnabled: boolean;
+    @Input() draggableClass = 'ng-avatar-draggable';
 
     /**
-     * The CSS class applied to a draggable element. If a dragHandle is defined then its applied to that handle
-     * element only. By default it is used to change the mouse over pointer.
+     * CSS class applied on the source draggable element while being dragged.
      */
-    @Input() dragHandleClass = 'drag-handle';
+    @Input() dragClass = 'drag-border';
+
+    /**
+     * CSS class applied on the drag ghost when being dragged.
+     */
+    @Input() dragTransitClass = 'drag-transit';
 
     /**
      * The selector that defines the drag Type.
@@ -79,18 +83,11 @@ export class Draggable implements OnInit, OnDestroy {
     _isDragging: boolean = false;
 
     @Input()
-    set draggable(dragEnabled: any) {
-        if (dragEnabled !== undefined && dragEnabled !== null && dragEnabled !== '') {
-            this.dragEnabled = !!dragEnabled;
-
+    set draggable() {
+        if (this.dragEnabled) {
             let element = this.dragHandle ? this.dragHandle : this.el.nativeElement;
 
-            if (this.dragEnabled) {
-                this.renderer.setElementClass(element, 'ng-avatar-drag-drop', true);
-            }
-            else {
-                this.renderer.setElementClass(element, 'ng-avatar-drag-drop', false);
-            }
+            this.renderer.setElementClass(element, this.draggableClass, this.dragEnabled);
         }
     }
 
@@ -225,6 +222,12 @@ export class Draggable implements OnInit, OnDestroy {
     }
 
     private catchupDrag(event: MouseEvent) {
+        if (!this.dragEnabled) {
+            event.preventDefault();
+
+            return;
+        }
+
         // get old z-index and position:
         this._originalZIndex = this.el.nativeElement.style.zIndex ? this.el.nativeElement.style.zIndex : '';
         this._originalPosition = this.el.nativeElement.style.position ? this.el.nativeElement.style.position : '';

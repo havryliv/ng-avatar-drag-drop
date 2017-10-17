@@ -7,13 +7,13 @@
 </div>
 <h2>Here are some links to help you start: </h2>
 <ul>
-  <li draggable [dragType]="DRAG_TYPE_TRANSFORM">
+  <li draggable [dragEnabled]="true" [dragType]="DRAG_TYPE_TRANSFORM">
     <h2><a target="_blank" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
   </li>
   <li draggable [dragType]="DRAG_TYPE_TRANSFORM">
     <h2><a target="_blank" href="https://github.com/angular/angular-cli/wiki">CLI Documentation</a></h2>
   </li>
-  <li draggable>
+  <li draggable [dragEnabled]="false">
     <h2><a target="_blank" href="https://blog.angular.io//">Angular blog</a></h2>
   </li>
 </ul>
