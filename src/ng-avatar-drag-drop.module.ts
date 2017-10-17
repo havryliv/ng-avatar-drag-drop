@@ -1,6 +1,6 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { Draggable } from './directives/draggable.directive';
-// import { Droppable } from './directives/droppable.directive';
+import { Droppable } from './directives/droppable.directive';
 import { NgAvatarDragDropService } from './services/ng-avatar-drag-drop.service';
 
 
@@ -8,11 +8,11 @@ import { NgAvatarDragDropService } from './services/ng-avatar-drag-drop.service'
     imports: [],
     declarations: [
         Draggable,
-        // Droppable
+        Droppable
     ],
     exports: [
         Draggable,
-        // Droppable
+        Droppable
     ]
 })
 export class NgAvatarDragDropModule {

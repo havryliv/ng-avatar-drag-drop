@@ -3,7 +3,6 @@ import { NgAvatarDragDropService } from '../services/ng-avatar-drag-drop.service
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeUntil';
-import { DomHelper } from '../helpers/dom.helper';
 import {Position} from "../classes/position.class";
 
 @Directive({
@@ -26,6 +25,11 @@ export class Draggable implements OnInit, OnDestroy {
      * If defined drag will only be allowed if dragged from the selector element.
      */
     @Input() dragHandle: HTMLElement;
+
+    /**
+     * Defines compatible drag drop pairs. Values must match both in draggable and droppable.dropScope.
+     */
+    @Input() dragScope: string | Array<string> = 'default';
 
     /**
      */
@@ -243,6 +247,7 @@ export class Draggable implements OnInit, OnDestroy {
         }
 
         this.ngAvatarDragDropService.dragData = this.dragData;
+        this.ngAvatarDragDropService.scope = this.dragScope;
 
         // setup default position:
         let position = (this.dragType == Draggable.DRAG_TYPE_POSITION) ?
@@ -292,6 +297,8 @@ export class Draggable implements OnInit, OnDestroy {
             this._originalPositionObject.x += this._temporaryPositionObject.x;
             this._originalPositionObject.y += this._temporaryPositionObject.y;
             this._temporaryPositionObject.x = this._temporaryPositionObject.y = 0;
+
+            console.log('drag end');
 
             this.ngAvatarDragDropService.onDragEnd.next();
             this.onDragEndEvent.emit(event);
