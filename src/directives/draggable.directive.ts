@@ -7,7 +7,7 @@ import { DomHelper } from '../helpers/dom.helper';
 import {Position} from "../classes/position.class";
 
 @Directive({
-    selector: '[draggable]'
+    selector: '[ngAvatarDraggable]'
 })
 /**
  * Makes an element draggable by adding the draggable html attribute
@@ -53,9 +53,19 @@ export class Draggable implements OnInit, OnDestroy {
     @Input() dragType: number = Draggable.DRAG_TYPE_POSITION;
 
     /**
+     * Event fired when Drag is started
+     */
+    @Output() onDragStartEvent: EventEmitter<any> = new EventEmitter();
+
+    /**
      * Event fired while the element is being dragged
      */
     @Output() onDragEvent: EventEmitter<any> = new EventEmitter();
+
+    /**
+     * Event fired when drag ends
+     */
+    @Output() onDragEndEvent: EventEmitter<any> = new EventEmitter();
 
     /**
      * @private
@@ -82,18 +92,8 @@ export class Draggable implements OnInit, OnDestroy {
 
     _isDragging: boolean = false;
 
-    @Input()
-    set draggable() {
-        if (this.dragEnabled) {
-            let element = this.dragHandle ? this.dragHandle : this.el.nativeElement;
-
-            this.renderer.setElementClass(element, this.draggableClass, this.dragEnabled);
-        }
-    }
-
     @HostListener('dragstart', ['$event'])
     onDragStart(event) {
-        console.log('dragstart');
         event.preventDefault();
 
         this.catchupDrag(event);
@@ -102,7 +102,6 @@ export class Draggable implements OnInit, OnDestroy {
 
     @HostListener('dragend', ['$event'])
     onDragEnd(event) {
-        console.log('dragend');
         return false;
     }
 
@@ -193,6 +192,12 @@ export class Draggable implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        if (this.dragEnabled) {
+            let element = this.dragHandle ? this.dragHandle : this.el.nativeElement;
+
+            this.renderer.setElementClass(element, this.draggableClass, this.dragEnabled);
+        }
+
         this.mouseDragEvent.subscribe({
             next: position => {
                 this.drag(position.left, position.top);
@@ -259,6 +264,7 @@ export class Draggable implements OnInit, OnDestroy {
             event.stopPropagation();
 
             this.mouseDownEvent.emit(event);
+            this.onDragStartEvent.emit(event);
             this.ngAvatarDragDropService.onDragStart.next();
             this._isDragging = true;
         }
@@ -288,6 +294,7 @@ export class Draggable implements OnInit, OnDestroy {
             this._temporaryPositionObject.x = this._temporaryPositionObject.y = 0;
 
             this.ngAvatarDragDropService.onDragEnd.next();
+            this.onDragEndEvent.emit(event);
 
             event.stopPropagation();
             event.preventDefault();
