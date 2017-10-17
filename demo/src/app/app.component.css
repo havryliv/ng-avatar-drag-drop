@@ -1,0 +1,8 @@
+ul > li {
+    background: black;
+    width: 250px;
+}
+
+ul > li a {
+    color: white;
+}
