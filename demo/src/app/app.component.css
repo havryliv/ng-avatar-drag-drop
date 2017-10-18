@@ -8,9 +8,18 @@ ul > li a {
 }
 
 .droppable-container {
-    width: 200px;
-    height: 200px;
-    background: lightgrey;
+    background-color: green;
+    width: 400px;
+    height: 400px;
+    position: relative;
+    top: 50px;
+    left: 100px;
+    float: left;
+    color: white;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Draggable*/

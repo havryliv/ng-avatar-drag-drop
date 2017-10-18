@@ -3,7 +3,7 @@ import { NgAvatarDragDropService } from '../services/ng-avatar-drag-drop.service
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeUntil';
-import {Subscription} from "rxjs";
+import {Subscription, Observable, Subject} from "rxjs";
 import {DropEvent} from "../classes/drop-event.class";
 
 @Directive({
@@ -74,6 +74,11 @@ export class Droppable implements OnInit, OnDestroy {
     /**
      * @private
      */
+    dragSubscription: Subscription;
+
+    /**
+     * @private
+     */
     dragEndSubscription: Subscription;
 
 
@@ -85,21 +90,8 @@ export class Droppable implements OnInit, OnDestroy {
 
     /**
      * @private
-     * Function for unbinding the drag enter listener
      */
-    unbindDragEnterListener: Function;
-
-    /**
-     * @private
-     * Function for unbinding the drag over listener
-     */
-    unbindDragOverListener: Function;
-
-    /**
-     * @private
-     * Function for unbinding the drag leave listener
-     */
-    unbindDragLeaveListener: Function;
+    _dropOver: boolean;
 
     constructor(protected el: ElementRef, private renderer: Renderer,
                 private ngAvatarDragDropService: NgAvatarDragDropService, private zone: NgZone) {
@@ -113,41 +105,28 @@ export class Droppable implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         this.unsubscribeService();
-        this.unbindDragListeners();
     }
 
-    dragEnter(e) {
-        console.log('dragEnter', this.allowDrop());
+    dragEnter() {
+
+    }
+
+    dragOver() {
         if (this.allowDrop()) {
             this.renderer.setElementClass(this.el.nativeElement, this.dragOverClass, true);
-            e.preventDefault();
-            e.stopPropagation();
-            this.onDragEnter.emit(e);
         }
     }
 
-    dragOver(e) {
+    dragLeave() {
         if (this.allowDrop()) {
-            this.renderer.setElementClass(this.el.nativeElement, this.dragOverClass, true);
-            e.preventDefault();
-            this.onDragOver.emit(e);
+            this.renderer.setElementClass(this.el.nativeElement, this.dragOverClass, false);
         }
     }
 
-    dragLeave(e) {
+    drop() {
         this.renderer.setElementClass(this.el.nativeElement, this.dragOverClass, false);
-        e.preventDefault();
-        this.onDragLeave.emit(e);
-    }
-
-    @HostListener('document:mouseup', ['$event'])
-    drop(e) {
-        this.renderer.setElementClass(this.el.nativeElement, this.dragOverClass, false);
-        e.preventDefault();
-        e.stopPropagation();
 
         this.ngAvatarDragDropService.onDragEnd.next();
-        this.onDrop.emit(new DropEvent(e, this.ngAvatarDragDropService.dragData));
         this.ngAvatarDragDropService.dragData = null;
         this.ngAvatarDragDropService.scope = null;
     }
@@ -182,27 +161,79 @@ export class Droppable implements OnInit, OnDestroy {
         this.dragStartSubscription = this.ngAvatarDragDropService.onDragStart.subscribe(() => {
             if (this.allowDrop()) {
                 this.renderer.setElementClass(this.el.nativeElement, this.dragHintClass, true);
-
-                this.zone.runOutsideAngular(() => {
-                    this.unbindDragEnterListener = this.renderer.listen(this.el.nativeElement, 'mouseenter', (dragEvent) => {
-                        this.dragEnter(dragEvent);
-                    });
-                    this.unbindDragOverListener = this.renderer.listen(this.el.nativeElement, 'mouseover', (dragEvent) => {
-                        this.dragOver(dragEvent);
-                    });
-                    this.unbindDragLeaveListener = this.renderer.listen(this.el.nativeElement, 'document:mouseleave', (dragEvent) => {
-                        this.dragLeave(dragEvent);
-                    });
-                    this.unbindDragLeaveListener = this.renderer.listen(this.el.nativeElement, 'document:mouseout', (dragEvent) => {
-                        this.dragLeave(dragEvent);
-                    });
-                });
             }
         });
 
+        this.dragSubscription = this.ngAvatarDragDropService.onDrag.subscribe(
+            (dragSubject: Subject<any>) => {
+                if (this.allowDrop()) {
+                    let mouseEvent: MouseEvent;
+
+                    const overlaps: Observable<boolean> = dragSubject.map(({ event, clientX, clientY }) => {
+                        mouseEvent = event;
+
+                        return this.isCoordinateWithinRectangle(
+                            clientX,
+                            clientY,
+                            this.el.nativeElement.getBoundingClientRect()
+                        );
+                    });
+
+                    const overlapsChanged: Observable<boolean> = overlaps.distinctUntilChanged();
+
+                    overlapsChanged.filter(overlapsNow => overlapsNow).subscribe(() => {
+                        this._dropOver = true;
+
+                        this.dragEnter();
+
+                        this.zone.run(() => {
+                            this.onDragEnter.next({
+                                dragData: this.ngAvatarDragDropService.dragData
+                            });
+                        });
+                    });
+
+                    overlaps.filter(overlapsNow => overlapsNow).subscribe(() => {
+                        this.dragOver();
+
+                        this.zone.run(() => {
+                            this.onDragOver.next({
+                                dragData: this.ngAvatarDragDropService.dragData
+                            });
+                        });
+                    });
+
+                    overlapsChanged
+                        .pairwise()
+                        .filter(([didOverlap, overlapsNow]) => didOverlap && !overlapsNow)
+                        .subscribe(() => {
+                            this._dropOver = false;
+                            this.dragLeave();
+
+                            this.zone.run(() => {
+                                this.onDragLeave.next({
+                                    dragData: this.ngAvatarDragDropService.dragData
+                                });
+                            });
+                        });
+
+                    dragSubject.flatMap(() => overlaps).subscribe({
+                        complete: () => {
+                            if (this._dropOver) {
+                                this.drop();
+
+                                this.zone.run(() => {
+                                    this.onDrop.next(new DropEvent(mouseEvent, this.ngAvatarDragDropService.dragData));
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        );
+
         this.dragEndSubscription = this.ngAvatarDragDropService.onDragEnd.subscribe(() => {
             this.renderer.setElementClass(this.el.nativeElement, this.dragHintClass, false);
-            this.unbindDragListeners();
         });
     }
 
@@ -210,20 +241,24 @@ export class Droppable implements OnInit, OnDestroy {
         if (this.dragStartSubscription) {
             this.dragStartSubscription.unsubscribe();
         }
+        if (this.dragSubscription) {
+            this.dragSubscription.unsubscribe();
+        }
         if (this.dragEndSubscription) {
             this.dragEndSubscription.unsubscribe();
         }
     }
 
-    unbindDragListeners() {
-        if (this.unbindDragEnterListener) {
-            this.unbindDragEnterListener();
-        }
-        if (this.unbindDragOverListener) {
-            this.unbindDragEnterListener();
-        }
-        if (this.unbindDragLeaveListener) {
-            this.unbindDragEnterListener();
-        }
+    private isCoordinateWithinRectangle(
+        clientX: number,
+        clientY: number,
+        rect: ClientRect
+    ): boolean {
+        return (
+            clientX >= rect.left &&
+            clientX <= rect.right &&
+            clientY >= rect.top &&
+            clientY <= rect.bottom
+        );
     }
 }

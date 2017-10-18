@@ -25,6 +25,7 @@
 
 <div class="droppable-container"
      ngAvatarDroppable
-    [dropEnabled]="true">
+    [dropEnabled]="true"
+    (onDrop)="onSecondBoxDrop($event)">
     Drop here.
 </div>
