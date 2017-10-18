@@ -3,11 +3,11 @@ import { NgAvatarDragDropService } from '../services/ng-avatar-drag-drop.service
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeUntil';
-import { DomHelper } from '../helpers/dom.helper';
 import {Position} from "../classes/position.class";
+import {Subject} from "rxjs";
 
 @Directive({
-    selector: '[draggable]'
+    selector: '[ngAvatarDraggable]'
 })
 /**
  * Makes an element draggable by adding the draggable html attribute
@@ -28,19 +28,28 @@ export class Draggable implements OnInit, OnDestroy {
     @Input() dragHandle: HTMLElement;
 
     /**
-     * The selector that defines the drag Bounds.
+     * Defines compatible drag drop pairs. Values must match both in draggable and droppable.dropScope.
      */
-    @Input() dragBounds: HTMLElement;
+    @Input() dragScope: string | Array<string> = 'default';
 
     /**
      */
-    @Input() dragEnabled: boolean;
+    @Input() dragEnabled: boolean = true;
 
     /**
-     * The CSS class applied to a draggable element. If a dragHandle is defined then its applied to that handle
-     * element only. By default it is used to change the mouse over pointer.
+     * CSS class applied on the source draggable element while being dragged.
      */
-    @Input() dragHandleClass = 'drag-handle';
+    @Input() draggableClass = 'ng-avatar-draggable';
+
+    /**
+     * CSS class applied on the source draggable element while being dragged.
+     */
+    @Input() dragClass = 'drag-border';
+
+    /**
+     * CSS class applied on the drag ghost when being dragged.
+     */
+    @Input() dragTransitClass = 'drag-transit';
 
     /**
      * The selector that defines the drag Type.
@@ -49,9 +58,19 @@ export class Draggable implements OnInit, OnDestroy {
     @Input() dragType: number = Draggable.DRAG_TYPE_POSITION;
 
     /**
+     * Event fired when Drag is started
+     */
+    @Output() onDragStartEvent: EventEmitter<any> = new EventEmitter();
+
+    /**
      * Event fired while the element is being dragged
      */
     @Output() onDragEvent: EventEmitter<any> = new EventEmitter();
+
+    /**
+     * Event fired when drag ends
+     */
+    @Output() onDragEndEvent: EventEmitter<any> = new EventEmitter();
 
     /**
      * @private
@@ -70,6 +89,8 @@ export class Draggable implements OnInit, OnDestroy {
     mouseDownEvent = new EventEmitter();
     mouseMoveEvent = new EventEmitter();
 
+    dragSubject: Subject<any> = new Subject();
+
     _originalZIndex: string = '';
     _originalPosition: string = '';
     _originalObject: Position = null;
@@ -78,25 +99,8 @@ export class Draggable implements OnInit, OnDestroy {
 
     _isDragging: boolean = false;
 
-    @Input()
-    set draggable(dragEnabled: any) {
-        if (dragEnabled !== undefined && dragEnabled !== null && dragEnabled !== '') {
-            this.dragEnabled = !!dragEnabled;
-
-            let element = this.dragHandle ? this.dragHandle : this.el.nativeElement;
-
-            if (this.dragEnabled) {
-                this.renderer.setElementClass(element, 'ng-avatar-drag-drop', true);
-            }
-            else {
-                this.renderer.setElementClass(element, 'ng-avatar-drag-drop', false);
-            }
-        }
-    }
-
     @HostListener('dragstart', ['$event'])
     onDragStart(event) {
-        console.log('dragstart');
         event.preventDefault();
 
         this.catchupDrag(event);
@@ -105,7 +109,6 @@ export class Draggable implements OnInit, OnDestroy {
 
     @HostListener('dragend', ['$event'])
     onDragEnd(event) {
-        console.log('dragend');
         return false;
     }
 
@@ -159,7 +162,7 @@ export class Draggable implements OnInit, OnDestroy {
         event.preventDefault();
 
         if (this._isDragging && this.dragEnabled) {
-            this.drag(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+            this.drag(event, event.changedTouches[0].clientX, event.changedTouches[0].clientY);
         }
     }
 
@@ -173,6 +176,7 @@ export class Draggable implements OnInit, OnDestroy {
                 private ngAvatarDragDropService: NgAvatarDragDropService, private zone: NgZone) {
         this.mouseDragEvent = this.mouseDownEvent.map((event: MouseEvent) => {
             return {
+                event: event,
                 top: event.clientY - this.el.nativeElement.getBoundingClientRect().top,
                 left: event.clientX - this.el.nativeElement.getBoundingClientRect().left
             };
@@ -181,11 +185,13 @@ export class Draggable implements OnInit, OnDestroy {
             imageOffset => this.mouseMoveEvent.map((event: MouseEvent) => {
                 if (this.dragType == Draggable.DRAG_TYPE_POSITION) {
                     return {
+                        event: event,
                         top: event.clientY - imageOffset.top,
                         left: event.clientX - imageOffset.left
                     }
                 } else {
                     return {
+                        event: event,
                         top: event.clientY,
                         left: event.clientX
                     }
@@ -196,9 +202,15 @@ export class Draggable implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        if (this.dragEnabled) {
+            let element = this.dragHandle ? this.dragHandle : this.el.nativeElement;
+
+            this.renderer.setElementClass(element, this.draggableClass, this.dragEnabled);
+        }
+
         this.mouseDragEvent.subscribe({
             next: position => {
-                this.drag(position.left, position.top);
+                this.drag(position.event, position.left, position.top);
             }
         });
     }
@@ -207,7 +219,7 @@ export class Draggable implements OnInit, OnDestroy {
         this.unbindDragListeners();
     }
 
-    private drag(x: number, y: number) {
+    private drag(event: any, x: number, y: number) {
         if (this.dragType == Draggable.DRAG_TYPE_POSITION) {
             this.renderer.setElementStyle(this.el.nativeElement, 'top', y + 'px');
             this.renderer.setElementStyle(this.el.nativeElement, 'left', x + 'px');
@@ -222,9 +234,21 @@ export class Draggable implements OnInit, OnDestroy {
             this.renderer.setElementStyle(this.el.nativeElement, '-moz-transform', value);
             this.renderer.setElementStyle(this.el.nativeElement, '-o-transform', value);
         }
+
+        this.dragSubject.next({
+            event: event,
+            clientX: x,
+            clientY: y
+        });
     }
 
     private catchupDrag(event: MouseEvent) {
+        if (!this.dragEnabled) {
+            event.preventDefault();
+
+            return;
+        }
+
         // get old z-index and position:
         this._originalZIndex = this.el.nativeElement.style.zIndex ? this.el.nativeElement.style.zIndex : '';
         this._originalPosition = this.el.nativeElement.style.position ? this.el.nativeElement.style.position : '';
@@ -235,6 +259,7 @@ export class Draggable implements OnInit, OnDestroy {
         }
 
         this.ngAvatarDragDropService.dragData = this.dragData;
+        this.ngAvatarDragDropService.scope = this.dragScope;
 
         // setup default position:
         let position = (this.dragType == Draggable.DRAG_TYPE_POSITION) ?
@@ -256,15 +281,20 @@ export class Draggable implements OnInit, OnDestroy {
             event.stopPropagation();
 
             this.mouseDownEvent.emit(event);
+            this.onDragStartEvent.emit(event);
+
             this.ngAvatarDragDropService.onDragStart.next();
+
             this._isDragging = true;
+
+            this.dragSubject.next({
+                event: event,
+                clientX: 0,
+                clientY: 0
+            });
         }
 
-        this.zone.runOutsideAngular(() => {
-            this.unbindDragListener = this.renderer.listen(this.el.nativeElement, 'mouse', (event) => {
-                this.onDrag(event);
-            });
-        });
+        this.ngAvatarDragDropService.onDrag.next(this.dragSubject);
     }
 
     private onDrag(e) {
@@ -285,6 +315,8 @@ export class Draggable implements OnInit, OnDestroy {
             this._temporaryPositionObject.x = this._temporaryPositionObject.y = 0;
 
             this.ngAvatarDragDropService.onDragEnd.next();
+            this.onDragEndEvent.emit(event);
+            this.dragSubject.complete();
 
             event.stopPropagation();
             event.preventDefault();
