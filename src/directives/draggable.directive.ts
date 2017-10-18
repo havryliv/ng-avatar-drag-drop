@@ -42,16 +42,6 @@ export class Draggable implements OnInit, OnDestroy {
     @Input() draggableClass = 'ng-avatar-draggable';
 
     /**
-     * CSS class applied on the source draggable element while being dragged.
-     */
-    @Input() dragClass = 'drag-border';
-
-    /**
-     * CSS class applied on the drag ghost when being dragged.
-     */
-    @Input() dragTransitClass = 'drag-transit';
-
-    /**
      * The selector that defines the drag Type.
      * If defined drag will only be allowed if dragged from the selector element.
      */
@@ -71,12 +61,6 @@ export class Draggable implements OnInit, OnDestroy {
      * Event fired when drag ends
      */
     @Output() onDragEndEvent: EventEmitter<any> = new EventEmitter();
-
-    /**
-     * @private
-     * Keeps track of mouse over element that is used to determine drag handles
-     */
-    mouseDownElement: any;
 
     /**
      * @private
