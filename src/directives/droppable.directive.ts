@@ -126,7 +126,6 @@ export class Droppable implements OnInit, OnDestroy {
     drop() {
         this.renderer.setElementClass(this.el.nativeElement, this.dragOverClass, false);
 
-        this.ngAvatarDragDropService.onDragEnd.next();
         this.ngAvatarDragDropService.dragData = null;
         this.ngAvatarDragDropService.scope = null;
     }
@@ -216,24 +215,20 @@ export class Droppable implements OnInit, OnDestroy {
                                 });
                             });
                         });
-
-                    dragSubject.flatMap(() => overlaps).subscribe({
-                        complete: () => {
-                            if (this._dropOver) {
-                                this.drop();
-
-                                this.zone.run(() => {
-                                    this.onDrop.next(new DropEvent(mouseEvent, this.ngAvatarDragDropService.dragData));
-                                });
-                            }
-                        }
-                    });
                 }
             }
         );
 
-        this.dragEndSubscription = this.ngAvatarDragDropService.onDragEnd.subscribe(() => {
+        this.dragEndSubscription = this.ngAvatarDragDropService.onDragEnd.subscribe((event: MouseEvent) => {
             this.renderer.setElementClass(this.el.nativeElement, this.dragHintClass, false);
+
+            if (this._dropOver && this.allowDrop()) {
+                this.drop();
+
+                this.zone.run(() => {
+                    this.onDrop.emit(new DropEvent(event, this.ngAvatarDragDropService.dragData));
+                });
+            }
         });
     }
 
