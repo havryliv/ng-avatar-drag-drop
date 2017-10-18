@@ -5,6 +5,7 @@ import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeUntil';
 import {Position} from "../classes/position.class";
 import {Subject} from "rxjs";
+import {AvatarMouseEvent} from "../classes/mouse-event.class";
 
 @Directive({
     selector: '[ngAvatarDraggable]'
@@ -97,18 +98,18 @@ export class Draggable implements OnInit, OnDestroy {
     }
 
     @HostListener('document:mouseup', ['$event'])
-    onMouseUp(event: MouseEvent) {
+    onMouseUp(event: AvatarMouseEvent) {
         this.mouseUpEvent.emit(event);
         this.revertChanges(event);
     }
 
     @HostListener('document:mouseleave', ['$event'])
-    onMouseLeave(event: MouseEvent) {
+    onMouseLeave(event: AvatarMouseEvent) {
         this.revertChanges(event);
     }
 
     @HostListener('mousedown', ['$event'])
-    onMouseDown(event: MouseEvent) {
+    onMouseDown(event: AvatarMouseEvent) {
         // 1. skip right click;
         // 2. if handle is set, the element can only be moved by handle
         if (event.button == 2 || (this.dragHandle !== undefined && event.target !== this.dragHandle)) {
@@ -123,7 +124,7 @@ export class Draggable implements OnInit, OnDestroy {
     }
 
     @HostListener('document:mousemove', ['$event'])
-    onMouseMove(event: MouseEvent) {
+    onMouseMove(event: AvatarMouseEvent) {
         this.mouseMoveEvent.emit(event);
     }
 
@@ -152,13 +153,13 @@ export class Draggable implements OnInit, OnDestroy {
 
     // Support Touch Events:
     @HostListener('document:touchend', ['$event'])
-    onTouchEnd(event: MouseEvent) {
+    onTouchEnd(event: AvatarMouseEvent) {
         this.revertChanges(event);
     }
 
     constructor(protected el: ElementRef, private renderer: Renderer,
                 private ngAvatarDragDropService: NgAvatarDragDropService, private zone: NgZone) {
-        this.mouseDragEvent = this.mouseDownEvent.map((event: MouseEvent) => {
+        this.mouseDragEvent = this.mouseDownEvent.map((event: AvatarMouseEvent) => {
             return {
                 event: event,
                 top: event.clientY - this.el.nativeElement.getBoundingClientRect().top,
@@ -166,7 +167,7 @@ export class Draggable implements OnInit, OnDestroy {
             };
         })
         .flatMap(
-            imageOffset => this.mouseMoveEvent.map((event: MouseEvent) => {
+            imageOffset => this.mouseMoveEvent.map((event: AvatarMouseEvent) => {
                 if (this.dragType == Draggable.DRAG_TYPE_POSITION) {
                     return {
                         event: event,
@@ -226,7 +227,7 @@ export class Draggable implements OnInit, OnDestroy {
         });
     }
 
-    private catchupDrag(event: MouseEvent) {
+    private catchupDrag(event: AvatarMouseEvent) {
         if (!this.dragEnabled) {
             event.preventDefault();
 
@@ -285,7 +286,7 @@ export class Draggable implements OnInit, OnDestroy {
         this.onDragEvent.emit(e);
     }
 
-    private revertChanges(event: MouseEvent) {
+    private revertChanges(event: AvatarMouseEvent) {
         if (this._originalZIndex) {
             this.renderer.setElementStyle(this.el.nativeElement, 'z-index', this._originalZIndex);
         } else {
@@ -294,8 +295,12 @@ export class Draggable implements OnInit, OnDestroy {
 
         if (this._isDragging) {
             this._isDragging = false;
-            this._originalPositionObject.x += this._temporaryPositionObject.x;
-            this._originalPositionObject.y += this._temporaryPositionObject.y;
+
+            if (this.dragType == Draggable.DRAG_TYPE_POSITION) {
+                this._originalPositionObject.x += this._temporaryPositionObject.x;
+                this._originalPositionObject.y += this._temporaryPositionObject.y;
+            }
+
             this._temporaryPositionObject.x = this._temporaryPositionObject.y = 0;
 
             event.stopPropagation();

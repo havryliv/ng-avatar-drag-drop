@@ -4,7 +4,7 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeUntil';
 import {Subscription, Observable, Subject} from "rxjs";
-import {DropEvent} from "../classes/drop-event.class";
+import {AvatarMouseEvent} from "../classes/mouse-event.class";
 
 @Directive({
     selector: '[ngAvatarDroppable]'
@@ -31,7 +31,7 @@ export class Droppable implements OnInit, OnDestroy {
     /**
      * Event fired when an element is dropped on a valid drop target.
      */
-    @Output() onDrop: EventEmitter<DropEvent> = new EventEmitter();
+    @Output() onDrop: EventEmitter<any> = new EventEmitter();
 
     /**
      * CSS class that is applied when a compatible draggable is being dragged over this droppable.
@@ -166,7 +166,7 @@ export class Droppable implements OnInit, OnDestroy {
         this.dragSubscription = this.ngAvatarDragDropService.onDrag.subscribe(
             (dragSubject: Subject<any>) => {
                 if (this.allowDrop()) {
-                    let mouseEvent: MouseEvent;
+                    let mouseEvent: AvatarMouseEvent;
 
                     const overlaps: Observable<boolean> = dragSubject.map(({ event, clientX, clientY }) => {
                         mouseEvent = event;
@@ -186,9 +186,7 @@ export class Droppable implements OnInit, OnDestroy {
                         this.dragEnter();
 
                         this.zone.run(() => {
-                            this.onDragEnter.next({
-                                dragData: this.ngAvatarDragDropService.dragData
-                            });
+                            this.onDragEnter.next(mouseEvent);
                         });
                     });
 
@@ -196,9 +194,7 @@ export class Droppable implements OnInit, OnDestroy {
                         this.dragOver();
 
                         this.zone.run(() => {
-                            this.onDragOver.next({
-                                dragData: this.ngAvatarDragDropService.dragData
-                            });
+                            this.onDragOver.next(mouseEvent);
                         });
                     });
 
@@ -210,23 +206,22 @@ export class Droppable implements OnInit, OnDestroy {
                             this.dragLeave();
 
                             this.zone.run(() => {
-                                this.onDragLeave.next({
-                                    dragData: this.ngAvatarDragDropService.dragData
-                                });
+                                this.onDragLeave.next(mouseEvent);
                             });
                         });
                 }
             }
         );
 
-        this.dragEndSubscription = this.ngAvatarDragDropService.onDragEnd.subscribe((event: MouseEvent) => {
+        this.dragEndSubscription = this.ngAvatarDragDropService.onDragEnd.subscribe((event: AvatarMouseEvent) => {
             this.renderer.setElementClass(this.el.nativeElement, this.dragHintClass, false);
 
             if (this._dropOver && this.allowDrop()) {
+                event.dragData = this.ngAvatarDragDropService.dragData;
                 this.drop();
 
                 this.zone.run(() => {
-                    this.onDrop.emit(new DropEvent(event, this.ngAvatarDragDropService.dragData));
+                    this.onDrop.emit(event);
                 });
             }
         });
