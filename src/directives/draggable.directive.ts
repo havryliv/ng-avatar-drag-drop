@@ -38,9 +38,14 @@ export class Draggable implements OnInit, OnDestroy {
     @Input() dragEnabled: boolean = true;
 
     /**
-     * CSS class applied on the source draggable element while being dragged.
+     * CSS class applied on the source draggable element.
      */
     @Input() draggableClass = 'ng-avatar-draggable';
+
+    /**
+     * CSS class applied on the source draggable element while being dragged.
+     */
+    @Input() dragClass = 'ng-avatar-drag';
 
     /**
      * The selector that defines the drag Type.
@@ -74,6 +79,7 @@ export class Draggable implements OnInit, OnDestroy {
     mouseDownEvent = new EventEmitter();
     mouseMoveEvent = new EventEmitter();
 
+    dragElement;
     dragSubject: Subject<any> = new Subject();
 
     _originalZIndex: string = '';
@@ -188,9 +194,9 @@ export class Draggable implements OnInit, OnDestroy {
 
     ngOnInit() {
         if (this.dragEnabled) {
-            let element = this.dragHandle ? this.dragHandle : this.el.nativeElement;
+            this.dragElement = this.dragHandle ? this.dragHandle : this.el.nativeElement;
 
-            this.renderer.setElementClass(element, this.draggableClass, this.dragEnabled);
+            this.renderer.setElementClass(this.dragElement, this.draggableClass, this.dragEnabled);
         }
 
         this.mouseDragEvent.subscribe({
@@ -205,6 +211,8 @@ export class Draggable implements OnInit, OnDestroy {
     }
 
     private drag(event: any, x: number, y: number) {
+        this.renderer.setElementClass(this.dragElement, this.dragClass, true);
+
         if (this.dragType == Draggable.DRAG_TYPE_POSITION) {
             this.renderer.setElementStyle(this.el.nativeElement, 'top', y + 'px');
             this.renderer.setElementStyle(this.el.nativeElement, 'left', x + 'px');
@@ -294,6 +302,7 @@ export class Draggable implements OnInit, OnDestroy {
         }
 
         if (this._isDragging) {
+            this.renderer.setElementClass(this.dragElement, this.dragClass, false);
             this._isDragging = false;
 
             if (this.dragType == Draggable.DRAG_TYPE_POSITION) {
