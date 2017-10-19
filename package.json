@@ -1,6 +1,6 @@
 {
   "name": "ng-avatar-drag-drop",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Drag & Drop for Angular 2 and beyond - without using HTML5 and with no external dependencies.",
   "main": "index.js",
   "typings": "index.d.ts",
