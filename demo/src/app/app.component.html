@@ -9,7 +9,9 @@
 <ul>
   <li ngAvatarDraggable
       [dragEnabled]="true"
-      [dragType]="DRAG_TYPE_TRANSFORM">
+      [dragType]="DRAG_TYPE_TRANSFORM"
+      ngAvatarDroppable
+      (onDrop)="onFirstBoxDrop($event)">
     <h2 #dragHandle><a target="_blank" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
   </li>
   <li ngAvatarDraggable

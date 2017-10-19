@@ -250,6 +250,7 @@ export class Draggable implements OnInit, OnDestroy {
             this._originalPosition = window.getComputedStyle(this.el.nativeElement, null).getPropertyValue("position");
         }
 
+        this.ngAvatarDragDropService.element = this.el;
         this.ngAvatarDragDropService.dragData = this.dragData;
         this.ngAvatarDragDropService.scope = this.dragScope;
 

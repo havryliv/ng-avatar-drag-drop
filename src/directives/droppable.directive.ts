@@ -216,13 +216,19 @@ export class Droppable implements OnInit, OnDestroy {
         this.dragEndSubscription = this.ngAvatarDragDropService.onDragEnd.subscribe((event: AvatarMouseEvent) => {
             this.renderer.setElementClass(this.el.nativeElement, this.dragHintClass, false);
 
-            if (this._dropOver && this.allowDrop()) {
-                event.dragData = this.ngAvatarDragDropService.dragData;
-                this.drop();
+            if (this._dropOver && this.allowDrop() && this.el.nativeElement !== this.ngAvatarDragDropService.element.nativeElement) {
+                if (this.isCoordinateWithinRectangle(
+                        event.clientX,
+                        event.clientY,
+                        this.el.nativeElement.getBoundingClientRect()
+                    )) {
+                    event.dragData = this.ngAvatarDragDropService.dragData;
+                    this.drop();
 
-                this.zone.run(() => {
-                    this.onDrop.emit(event);
-                });
+                    this.zone.run(() => {
+                        this.onDrop.emit(event);
+                    });
+                }
             }
         });
     }
