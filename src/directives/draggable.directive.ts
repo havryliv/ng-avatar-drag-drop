@@ -105,6 +105,9 @@ export class Draggable implements OnInit, OnDestroy {
 
     @HostListener('document:mouseup', ['$event'])
     onMouseUp(event: AvatarMouseEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+
         this.mouseUpEvent.emit(event);
         this.revertChanges(event);
     }
@@ -116,6 +119,9 @@ export class Draggable implements OnInit, OnDestroy {
 
     @HostListener('mousedown', ['$event'])
     onMouseDown(event: AvatarMouseEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+
         // 1. skip right click;
         // 2. if handle is set, the element can only be moved by handle
         if (event.button == 2 || (this.dragHandle !== undefined && event.target !== this.dragHandle)) {
@@ -208,24 +214,19 @@ export class Draggable implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         this.unbindDragListeners();
+        this.mouseDragEvent.unsubscribe();
     }
 
     private drag(event: any, x: number, y: number) {
         this.renderer.setElementClass(this.dragElement, this.dragClass, true);
 
         if (this.dragType == Draggable.DRAG_TYPE_POSITION) {
-            this.renderer.setElementStyle(this.el.nativeElement, 'top', y + 'px');
-            this.renderer.setElementStyle(this.el.nativeElement, 'left', x + 'px');
+            this.setMovementStyles(y, x);
         } else {
             this._temporaryPositionObject.x = x - this._originalObject.x;
             this._temporaryPositionObject.y = y - this._originalObject.y;
-            let value = `translate(${this._temporaryPositionObject.x + this._originalPositionObject.x}px, ${this._temporaryPositionObject.y + this._originalPositionObject.y}px)`;
 
-            this.renderer.setElementStyle(this.el.nativeElement, 'transform', value);
-            this.renderer.setElementStyle(this.el.nativeElement, '-webkit-transform', value);
-            this.renderer.setElementStyle(this.el.nativeElement, '-ms-transform', value);
-            this.renderer.setElementStyle(this.el.nativeElement, '-moz-transform', value);
-            this.renderer.setElementStyle(this.el.nativeElement, '-o-transform', value);
+            this.setMovementStyles(this._temporaryPositionObject.x + this._originalPositionObject.x, this._temporaryPositionObject.y + this._originalPositionObject.y);
         }
 
         this.dragSubject.next({
@@ -237,8 +238,6 @@ export class Draggable implements OnInit, OnDestroy {
 
     private catchupDrag(event: AvatarMouseEvent) {
         if (!this.dragEnabled) {
-            event.preventDefault();
-
             return;
         }
 
@@ -311,12 +310,25 @@ export class Draggable implements OnInit, OnDestroy {
             }
 
             this._temporaryPositionObject.x = this._temporaryPositionObject.y = 0;
-
-            event.stopPropagation();
-            event.preventDefault();
+            this.setMovementStyles(0, 0);
 
             this.ngAvatarDragDropService.onDragEnd.next(event);
             this.onDragEndEvent.emit(event);
+        }
+    }
+
+    private setMovementStyles(top: number, left: number) {
+        if (this.dragType == Draggable.DRAG_TYPE_POSITION) {
+            this.renderer.setElementStyle(this.el.nativeElement, 'top', top + 'px');
+            this.renderer.setElementStyle(this.el.nativeElement, 'left', left + 'px');
+        } else {
+            let value = `translate(${top}px, ${left}px)`;
+
+            this.renderer.setElementStyle(this.el.nativeElement, 'transform', value);
+            this.renderer.setElementStyle(this.el.nativeElement, '-webkit-transform', value);
+            this.renderer.setElementStyle(this.el.nativeElement, '-ms-transform', value);
+            this.renderer.setElementStyle(this.el.nativeElement, '-moz-transform', value);
+            this.renderer.setElementStyle(this.el.nativeElement, '-o-transform', value);
         }
     }
 
