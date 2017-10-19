@@ -218,7 +218,7 @@ export class Draggable implements OnInit, OnDestroy {
     }
 
     private drag(event: any, x: number, y: number) {
-        this.renderer.setElementClass(this.dragElement, this.dragClass, true);
+        this.renderer.setElementClass(this.el.nativeElement, this.dragClass, true);
 
         if (this.dragType == Draggable.DRAG_TYPE_POSITION) {
             this.setMovementStyles(y, x);
@@ -301,7 +301,7 @@ export class Draggable implements OnInit, OnDestroy {
         }
 
         if (this._isDragging) {
-            this.renderer.setElementClass(this.dragElement, this.dragClass, false);
+            this.renderer.setElementClass(this.el.nativeElement, this.dragClass, false);
             this._isDragging = false;
 
             if (this.dragType == Draggable.DRAG_TYPE_POSITION) {
