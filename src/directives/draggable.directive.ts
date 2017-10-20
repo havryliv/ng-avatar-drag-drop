@@ -325,8 +325,8 @@ export class Draggable implements OnInit, OnDestroy {
             this._temporaryPositionObject.x = this._temporaryPositionObject.y = 0;
             this.setMovementStyles(0, 0);
 
-            this.ngAvatarDragDropService.onDragEnd.next(event);
             this.onDragEndEvent.emit(event);
+            this.ngAvatarDragDropService.onDragEnd.next(event);
         }
     }
 
