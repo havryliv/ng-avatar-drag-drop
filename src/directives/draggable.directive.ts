@@ -93,6 +93,7 @@ export class Draggable implements OnInit, OnDestroy {
     @HostListener('dragstart', ['$event'])
     onDragStart(event) {
         event.preventDefault();
+        event.stopPropagation();
 
         this.catchupDrag(event);
         return false;
@@ -103,10 +104,15 @@ export class Draggable implements OnInit, OnDestroy {
         return false;
     }
 
+    @HostListener('mouseup', ['$event'])
+    onElementMouseUp(event: AvatarMouseEvent) {
+        return false;
+    }
+
     @HostListener('document:mouseup', ['$event'])
     onMouseUp(event: AvatarMouseEvent) {
-        event.stopPropagation();
         event.preventDefault();
+        event.stopPropagation();
 
         this.mouseUpEvent.emit(event);
         this.revertChanges(event);
@@ -114,13 +120,16 @@ export class Draggable implements OnInit, OnDestroy {
 
     @HostListener('document:mouseleave', ['$event'])
     onMouseLeave(event: AvatarMouseEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+
         this.revertChanges(event);
     }
 
     @HostListener('mousedown', ['$event'])
     onMouseDown(event: AvatarMouseEvent) {
-        event.stopPropagation();
         event.preventDefault();
+        event.stopPropagation();
 
         // 1. skip right click;
         // 2. if handle is set, the element can only be moved by handle
@@ -137,6 +146,9 @@ export class Draggable implements OnInit, OnDestroy {
 
     @HostListener('document:mousemove', ['$event'])
     onMouseMove(event: AvatarMouseEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+
         this.mouseMoveEvent.emit(event);
     }
 
