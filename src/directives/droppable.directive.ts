@@ -3,7 +3,7 @@ import { NgAvatarDragDropService } from '../services/ng-avatar-drag-drop.service
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeUntil';
-import {Subscription, Observable, Subject} from "rxjs";
+import {Subscription, Observable, Subject} from "rxjs/Rx";
 import {AvatarMouseEvent} from "../classes/mouse-event.class";
 
 @Directive({

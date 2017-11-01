@@ -4,7 +4,7 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeUntil';
 import {Position} from "../classes/position.class";
-import {Subject} from "rxjs";
+import {Subject} from "rxjs/Rx";
 import {AvatarMouseEvent} from "../classes/mouse-event.class";
 
 @Directive({
