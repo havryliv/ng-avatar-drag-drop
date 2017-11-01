@@ -7,6 +7,6 @@ Drag & Drop for Angular 2 and beyond - without using HTML5 and with no external 
 
 # Demo
 
-Check out the [Plunker demo](http://plnkr.co/edit/2bjGgzWnbFrciEiCKLew?p=preview).
+Check out the [Plunker demo](http://plnkr.co/edit/e10fbXm0UDvhsIWtSto6?p=preview).
 
 The [demo folder](https://github.com/havryliv/ng-avatar-drag-drop/tree/master/demo) of the repository contains the same demo as Plunkr that uses SystemJS. To run that demo do an `npm install` in that folder followed by `npm start` to serve the demo app.

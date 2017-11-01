@@ -6,7 +6,7 @@ require("rxjs/add/operator/map");
 require("rxjs/add/operator/mergeMap");
 require("rxjs/add/operator/takeUntil");
 var position_class_1 = require("../classes/position.class");
-var rxjs_1 = require("rxjs");
+var Rx_1 = require("rxjs/Rx");
 /**
  * Makes an element draggable by adding the draggable html attribute
  */
@@ -52,7 +52,7 @@ var Draggable = /** @class */ (function () {
         this.mouseUpEvent = new core_1.EventEmitter();
         this.mouseDownEvent = new core_1.EventEmitter();
         this.mouseMoveEvent = new core_1.EventEmitter();
-        this.dragSubject = new rxjs_1.Subject();
+        this.dragSubject = new Rx_1.Subject();
         this._originalZIndex = '';
         this._originalPosition = '';
         this._originalObject = null;
