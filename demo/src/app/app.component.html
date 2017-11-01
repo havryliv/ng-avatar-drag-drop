@@ -7,11 +7,23 @@
 </div>
 <h2>Here are some links to help you start: </h2>
 <ul>
-  <li ngAvatarDraggable [dragEnabled]="true" [dragType]="DRAG_TYPE_TRANSFORM">
-    <h2><a target="_blank" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
+  <li ngAvatarDraggable
+      [dragEnabled]="true"
+      [dragType]="DRAG_TYPE_TRANSFORM"
+      ngAvatarDroppable
+      (onDrop)="onFirstBoxDrop($event)">
+    <h2 #dragHandle><a target="_blank" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
   </li>
-  <li ngAvatarDraggable [dragEnabled]="false" [dragType]="DRAG_TYPE_TRANSFORM">
+  <li ngAvatarDraggable
+      [dragEnabled]="false"
+      [dragType]="DRAG_TYPE_TRANSFORM">
     <h2><a target="_blank" href="https://github.com/angular/angular-cli/wiki">CLI Documentation</a></h2>
+  </li>
+  <li ngAvatarDraggable
+      [dragEnabled]="true"
+      [dragScope]="'one'"
+      [dragType]="DRAG_TYPE_TRANSFORM">
+    <h2><a target="_blank" href="https://github.com/angular/angular-cli/wiki">Something else</a></h2>
   </li>
   <li ngAvatarDraggable>
     <h2><a target="_blank" href="https://blog.angular.io//">Angular blog</a></h2>
@@ -19,7 +31,9 @@
 </ul>
 
 <div class="droppable-container"
-    ngAvatarDroppable>
+    ngAvatarDroppable
+    [dropScope]="'one'"
+     (onDrop)="onFirstBoxDrop($event)">
     Drop here.
 </div>
 

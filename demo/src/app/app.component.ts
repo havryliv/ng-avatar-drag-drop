@@ -8,6 +8,10 @@ import { Component } from '@angular/core';
 export class AppComponent {
   title = 'app';
 
+  onFirstBoxDrop(event) {
+    console.log(event);
+  }
+
   onSecondBoxDrop(event) {
     console.log(event);
   }
