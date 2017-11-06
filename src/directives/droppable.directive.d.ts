@@ -3,7 +3,7 @@ import { NgAvatarDragDropService } from '../services/ng-avatar-drag-drop.service
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeUntil';
-import { Subscription } from "rxjs";
+import { Subscription } from "rxjs/Rx";
 export declare class Droppable implements OnInit, OnDestroy {
     protected el: ElementRef;
     private renderer;
