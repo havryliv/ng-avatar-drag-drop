@@ -22,7 +22,7 @@
     "@angular/platform-browser-dynamic": "^4.4.6",
     "@angular/router": "^4.4.6",
     "core-js": "^2.4.1",
-    "ng-avatar-drag-drop": "0.0.15",
+    "ng-avatar-drag-drop": "1.0.0",
     "rxjs": "^5.5.0",
     "zone.js": "^0.8.14"
   },
